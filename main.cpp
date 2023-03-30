@@ -15,11 +15,11 @@ int main(){
 			{
 				board[i][j] = 'X';
 			}
-			if (j == 0 || j == 11)
+			else if (j == 0 || j == 11)
 			{
 				board[i][j] = 'X';
 			}
-			board[i][j] = '_';
+			else board[i][j] = '_';
 		}
 	}
 
