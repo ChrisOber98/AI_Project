@@ -5,8 +5,8 @@ using namespace std;
 class Snake
 {
 private:
-	int snake_x, snake_y, board_length, board_height;
-	char board[12][12];
+	int snake_x, snake_y, snake_length, board_length, board_height;
+	int board[12][12];
 	bool up, left, down, right, exit;
 
 public:
@@ -23,6 +23,7 @@ public:
 
 		snake_x = 1;
 		snake_y = 1;
+		snake_length = 5;
 
 		for (int i = 0; i < board_height; i++)
 		{
@@ -30,30 +31,30 @@ public:
 			{
 				if(i == 0 || i == 11)
 				{
-					board[i][j] = 'X';
+					board[i][j] = -1;
 				}
 				else if(j == 0 || j == 11)
 				{
-					board[i][j] = 'X';
+					board[i][j] = -1;
 				}
 				else
 				{
-					board[i][j] = '_';
+					board[i][j] = 0;
 				}
 			}
 		}
-		board[snake_x][snake_y] = 'O';
+		board[snake_x][snake_y] = snake_length;
 	}
 	~Snake()
 	{
 
 	}
 
-	void displayBoard();
+	void displayBoard(int length);
 	void play();
 	void getInput();
 	void updatePlayer();
-	void updateBoard();
+	void updateBoard(int length);
 
 };
 
@@ -64,13 +65,19 @@ int main(){
 	return 0;
 }
 
-void Snake::displayBoard()
+void Snake::displayBoard(int length)
 {
 	for (int i = 0; i < 12; i++)
 	{
 		for (int j = 0; j < 12; j++)
 		{
-			cout << board[i][j];
+			if (board[i][j] == -1){
+				cout << 'X';
+			} else if(board[i][j] == length){
+				cout << 'e';
+			} else if(board[i][j] > 0){
+				cout << 'o';
+			} else cout << '_';
 		}
 		cout << endl;
 	}		
@@ -81,8 +88,8 @@ void Snake::play()
 	while(exit != true)
 	{
 		updatePlayer();
-		updateBoard();
-		displayBoard();
+		updateBoard(snake_length);
+		displayBoard(snake_length);
 		getInput();
 	}
 }
@@ -159,25 +166,17 @@ void Snake::updatePlayer()
 	}
 }
 
-void Snake::updateBoard()
+void Snake::updateBoard(int length)
 {
-	for (int i = 0; i < board_height; i++)
+	for (int i = 1; i < board_height-1; i++)
 	{
-		for (int j = 0; j < board_length; j++)
+		for (int j = 1; j < board_length-1; j++)
 		{
-			if(i == 0 || i == 11)
+			if(board[i][j] > 0)
 			{
-				board[i][j] = 'X';
-			}
-			else if(j == 0 || j == 11)
-			{
-				board[i][j] = 'X';
-			}
-			else
-			{
-				board[i][j] = '_';
+				board[i][j]--;
 			}
 		}
 	}
-	board[snake_x][snake_y] = 'O';	
+	board[snake_x][snake_y] = length;	
 }
