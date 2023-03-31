@@ -8,8 +8,9 @@ class Snake
 {
 private:
 	int snake_x, snake_y, snake_length, prevInput, board_length, board_height;
+	int apple_x, apple_y;
 	int board[12][12];
-	bool up, left, down, right, exit;
+	bool up, left, down, right, exit, eaten;
 
 
 public:
@@ -20,6 +21,7 @@ public:
 		down = false;
 		right = false;
 		exit = false;
+		eaten = false;
 		prevInput = 2;
 
 		board_height = 12;
@@ -27,6 +29,10 @@ public:
 
 		snake_x = 1;
 		snake_y = 1;
+
+		apple_x = 5;
+		apple_y = 5;
+
 		snake_length = 5;
 
 		for (int i = 0; i < board_height; i++)
@@ -48,6 +54,7 @@ public:
 			}
 		}
 		board[snake_x][snake_y] = snake_length;
+		board[apple_x][apple_y] = 20;
 	}
 	~Snake()
 	{
@@ -84,8 +91,12 @@ void Snake::displayBoard()
 				cout << 'X';
 			} else if(board[i][j] == snake_length){
 				cout << 'e';
-			} else if(board[i][j] > 0){
+			} else if(board[i][j] > 0 && board[i][j] != 20){
 				cout << 'o';
+			} else if (board[i][j] == 0){
+				cout << '_';
+			} else if(board[i][j] == 20){
+				cout << 'a';
 			} else cout << '_';
 		}
 		cout << endl;
@@ -214,5 +225,11 @@ void Snake::updateBoard()
 	} else if(left){
 		prevInput = 4;
 	}
+
+	if(eaten)
+	{
+
+	}
+	board[apple_x][apple_y] = 20;
 	board[snake_x][snake_y] = snake_length;	
 }
