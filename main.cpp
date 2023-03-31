@@ -1,13 +1,16 @@
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
 class Snake
 {
 private:
-	int snake_x, snake_y, snake_length, board_length, board_height;
+	int snake_x, snake_y, snake_length, prevInput, board_length, board_height;
 	int board[12][12];
 	bool up, left, down, right, exit;
+
 
 public:
 	Snake()
@@ -17,6 +20,7 @@ public:
 		down = false;
 		right = false;
 		exit = false;
+		prevInput = 2;
 
 		board_height = 12;
 		board_length = 12;
@@ -50,22 +54,27 @@ public:
 
 	}
 
-	void displayBoard(int length);
+	void displayBoard();
 	void play();
 	void getInput();
 	void updatePlayer();
-	void updateBoard(int length);
+	void updateBoard();
 
 };
 
 int main(){
+
+	// instructions
+	cout << "To play use 'wasd' to move." << endl;
+	cout << "To exit use 'x'." << endl;
+	cout << "Press enter to start." << endl;
 
 	Snake my_snake;
 	my_snake.play();
 	return 0;
 }
 
-void Snake::displayBoard(int length)
+void Snake::displayBoard()
 {
 	for (int i = 0; i < 12; i++)
 	{
@@ -73,7 +82,7 @@ void Snake::displayBoard(int length)
 		{
 			if (board[i][j] == -1){
 				cout << 'X';
-			} else if(board[i][j] == length){
+			} else if(board[i][j] == snake_length){
 				cout << 'e';
 			} else if(board[i][j] > 0){
 				cout << 'o';
@@ -88,8 +97,14 @@ void Snake::play()
 	while(exit != true)
 	{
 		updatePlayer();
-		updateBoard(snake_length);
-		displayBoard(snake_length);
+		updateBoard();
+		displayBoard();
+
+		// sleep and clear the input after each display
+		// avoids multiple moves in one turn
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
+		fseek(stdin,0,SEEK_END);
+
 		getInput();
 	}
 }
@@ -104,8 +119,12 @@ void Snake::getInput()
 	right = false;
 	exit = false;
 
-	cout << "WASD or x to exit: ";
-	cin >> input;
+	// Set terminal to raw mode 
+	system("stty raw"); 
+	// Wait for single character 
+	input = getchar(); 
+	// Reset terminal to normal "cooked" mode 
+	system("stty cooked"); 
 
 	if (input == 'w')
 	{
@@ -127,9 +146,21 @@ void Snake::getInput()
 	{
 		exit = true;
 	}
-	else
-	{
-		cout << "invalid input\n";
+	else {
+		switch(prevInput){
+			case 1:
+				up = true;
+				break;
+			case 2:
+				right = true;
+				break;
+			case 3:
+				down = true;
+				break;
+			case 4:
+				left = true;
+				break;
+		}
 	}
 }
 
@@ -159,14 +190,10 @@ void Snake::updatePlayer()
 		if(snake_y == 11)
 			snake_y -= 1;
 
-	}	
-	else
-	{
-		
 	}
 }
 
-void Snake::updateBoard(int length)
+void Snake::updateBoard()
 {
 	for (int i = 1; i < board_height-1; i++)
 	{
@@ -178,5 +205,14 @@ void Snake::updateBoard(int length)
 			}
 		}
 	}
-	board[snake_x][snake_y] = length;	
+	if(up){
+		prevInput = 1;
+	} else if(right){
+		prevInput = 2;
+	} else if(down){
+		prevInput = 3;
+	} else if(left){
+		prevInput = 4;
+	}
+	board[snake_x][snake_y] = snake_length;	
 }
