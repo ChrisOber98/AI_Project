@@ -75,7 +75,6 @@ int main(){
 	cout << "To play use 'wasd' to move." << endl;
 	cout << "To exit use 'x'." << endl;
 	cout << "Press enter to start." << endl;
-	cout << "Thanks to my team members"<<endl;
 	Snake my_snake;
 	my_snake.play();
 	return 0;
