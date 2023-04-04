@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <random>
 
 using namespace std;
 
@@ -9,6 +10,7 @@ class Snake
 private:
 	int snake_x, snake_y, snake_length, prevInput, board_length, board_height;
 	int apple_x, apple_y;
+	int points;
 	int board[12][12];
 	bool up, left, down, right, exit, eaten;
 
@@ -33,7 +35,9 @@ public:
 		apple_x = 5;
 		apple_y = 5;
 
-		snake_length = 5;
+		points = 0;
+
+		snake_length = 3;
 
 		for (int i = 0; i < board_height; i++)
 		{
@@ -54,7 +58,7 @@ public:
 			}
 		}
 		board[snake_x][snake_y] = snake_length;
-		board[apple_x][apple_y] = 20;
+		board[apple_x][apple_y] = -10;
 	}
 	~Snake()
 	{
@@ -90,11 +94,11 @@ void Snake::displayBoard()
 				cout << 'X';
 			} else if(board[i][j] == snake_length){
 				cout << 'e';
-			} else if(board[i][j] > 0 && board[i][j] != 20){
+			} else if(board[i][j] > 0){
 				cout << 'o';
 			} else if (board[i][j] == 0){
 				cout << '_';
-			} else if(board[i][j] == 20){
+			} else if(board[i][j] == -10){
 				cout << 'a';
 			} else cout << '_';
 		}
@@ -117,6 +121,7 @@ void Snake::play()
 
 		getInput();
 	}
+	cout << "Points scored: " << points << endl;
 }
 
 void Snake::getInput()
@@ -178,7 +183,9 @@ void Snake::updatePlayer()
 {
 	if (up == true)
 	{
+		// move the snake
 		snake_x -= 1;
+		// make sure we're not going out of bounds
 		if(snake_x == 0)
 			snake_x += 1;
 	}
@@ -200,6 +207,12 @@ void Snake::updatePlayer()
 		if(snake_y == 11)
 			snake_y -= 1;
 
+	}
+
+	// record if we are eating an apple
+	if(snake_x == apple_x && snake_y == apple_y){
+		eaten = true;
+		points++;
 	}
 }
 
@@ -227,8 +240,39 @@ void Snake::updateBoard()
 
 	if(eaten)
 	{
+		snake_length++;
+		eaten = false;
+		// increment all snake body
+		for (int i = 1; i < board_height-1; i++)
+		{
+			for (int j = 1; j < board_length-1; j++)
+			{
+				if(board[i][j] > 0)
+				{
+					board[i][j]++;
+				}
+			}
+		}
 
+		//generate a new apple
+		int randX;
+		int randY;
+		bool collision = true;
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> distr(1, 10);
+
+		// make sure the apple appears on an empty spot
+		do{
+			randX = distr(gen);
+			randY = distr(gen);
+			if(board[randX][randY] == 0){
+				apple_x = randX;
+				apple_y = randY;
+				board[apple_x][apple_y] = -10;
+				collision = false;
+			}
+		}while(collision);
 	}
-	board[apple_x][apple_y] = 20;
 	board[snake_x][snake_y] = snake_length;	
 }
