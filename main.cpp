@@ -119,7 +119,9 @@ void Snake::play()
 		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 		fseek(stdin,0,SEEK_END);
 
-		getInput();
+		if(!exit){
+			getInput();
+		}
 	}
 	cout << "Points scored: " << points << endl;
 }
@@ -132,7 +134,7 @@ void Snake::getInput()
 	left = false;
 	down = false;
 	right = false;
-	exit = false;
+	//exit = false;
 
 	// Set terminal to raw mode 
 	system("stty raw"); 
@@ -144,18 +146,30 @@ void Snake::getInput()
 	if (input == 'w')
 	{
 		up = true;
+		if(board[snake_x - 1][snake_y] > 1 || board[snake_x - 1][snake_y] == -1){
+			exit = true;
+		}
 	}
 	else if (input == 'a')
 	{
 		left = true;
+		if(board[snake_x][snake_y - 1] > 1 || board[snake_x][snake_y - 1] == -1){
+			exit = true;
+		}
 	}
 	else if (input == 's')
 	{
 		down = true;
+		if(board[snake_x + 1][snake_y] > 1 || board[snake_x + 1][snake_y] == -1){
+			exit = true;
+		}
 	}
 	else if (input == 'd')
 	{
 		right = true;
+		if(board[snake_x][snake_y + 1] > 1 || board[snake_x][snake_y + 1] == -1){
+			exit = true;
+		}
 	}	
 	else if (input == 'x')
 	{
@@ -186,27 +200,30 @@ void Snake::updatePlayer()
 		// move the snake
 		snake_x -= 1;
 		// make sure we're not going out of bounds
-		if(snake_x == 0)
+		if(snake_x == 0){
 			snake_x += 1;
+		}
 	}
 	else if (left == true)
 	{
 		snake_y -= 1;
-		if(snake_y == 0)
+		if(snake_y == 0){
 			snake_y += 1;
+		}
 	}
 	else if (down == true)
 	{
 		snake_x += 1;
-		if(snake_x == 11)
+		if(snake_x == 11){
 			snake_x -= 1;
+		}
 	}
 	else if (right == true)
 	{
 		snake_y += 1;
-		if(snake_y == 11)
+		if(snake_y == 11){
 			snake_y -= 1;
-
+		}
 	}
 
 	// record if we are eating an apple
