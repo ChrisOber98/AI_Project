@@ -70,6 +70,8 @@ public:
 	void getInput();
 	void updatePlayer();
 	void updateBoard();
+	void calc_m_board();
+	void displayMBoard();
 
 };
 
@@ -113,13 +115,16 @@ void Snake::play()
 		updatePlayer();
 		updateBoard();
 		displayBoard();
+		calc_m_board();
+		displayMBoard();
 
 		// sleep and clear the input after each display
 		// avoids multiple moves in one turn
 		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 		fseek(stdin,0,SEEK_END);
 
-		getInput();
+		//getInput();
+		exit = true;
 	}
 	cout << "Points scored: " << points << endl;
 }
@@ -275,4 +280,53 @@ void Snake::updateBoard()
 		}while(collision);
 	}
 	board[snake_x][snake_y] = snake_length;	
+}
+
+void Snake::calc_m_board()
+{
+	for (int i = 0; i < board_height; i++)
+	{
+		for (int j = 0; j < board_length; j++)
+		{
+			if(i == 0 || i == 11)
+			{
+				board[i][j] = -1;
+			}
+			else if(j == 0 || j == 11)
+			{
+				board[i][j] = -1;
+			}
+			else
+			{
+				int x_dif = 0;
+				int y_dif = 0;
+
+				int man_dist = 0;
+
+				x_dif = apple_x - i;
+  				y_dif = apple_y - j;
+
+  				if (x_dif < 0)
+  					x_dif = -x_dif;
+
+  				if (y_dif < 0)
+  					y_dif = -y_dif;
+
+  				board[i][j] = x_dif + y_dif;
+			}
+		}
+	}
+}
+
+void Snake::displayMBoard()
+{
+	for (int i = 0; i < 12; i++)
+	{
+		for (int j = 0; j < 12; j++)
+		{
+			cout << board[i][j];
+			cout << "\t";
+		}
+		cout << endl;
+	}		
 }
