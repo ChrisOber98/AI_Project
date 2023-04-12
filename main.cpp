@@ -175,6 +175,7 @@ void Snake::play()
 
             updatePlayer();
             updateBoard();
+			cout << "Points scored: " << points << endl;
             displayBoard();
             
             // sleep and clear the input after each display
@@ -184,7 +185,6 @@ void Snake::play()
             
             //exit = true;
         }
-    cout << "Points scored: " << points << endl;
     }
 }
 
