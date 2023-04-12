@@ -90,13 +90,15 @@ public:
     void getInput();
     void updatePlayer();
     void updateBoard();
-    void calc_m_board();
+    void calc_h_board();
     void displayHBoard();
     void displayPathBoard();
     void calcAStar();
     bool checkChild(tuple<int, int> child, tuple<int, int> lowest_tup, list<tuple<int, int> > &open_list, list<tuple<int, int> > &close_list, char dir);
     void getPath();
+    void resetPath();
     void displayPath();
+    void resetPathBoard();
 
 };
 
@@ -150,24 +152,31 @@ void Snake::displayPathBoard()
 
 void Snake::play()
 {
-    calc_m_board();
-    calcAStar();
-    getPath();
-    while(exit != true)
+    while(true)
     {
-        updatePlayer();
-        updateBoard();
-        displayBoard();
+        exit = false;
+        resetPath();
+        resetPathBoard();
+        calc_h_board();
+        calcAStar();
+        getPath();
+        while(exit != true)
+        {
+            updatePlayer();
+            updateBoard();
+            displayBoard();
             
-        // sleep and clear the input after each display
-        // avoids multiple moves in one turn
-        std::this_thread::sleep_for(std::chrono::milliseconds(250));
-        fseek(stdin,0,SEEK_END);
+            // sleep and clear the input after each display
+            // avoids multiple moves in one turn
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            fseek(stdin,0,SEEK_END);
+
+            getInput();
             
-        getInput();
-        //exit = true;
-    }
+            //exit = true;
+        }
     cout << "Points scored: " << points << endl;
+    }
 }
 
 void Snake::getInput()
@@ -187,6 +196,7 @@ void Snake::getInput()
     
     if(path.size() == 0)
     {
+        exit = true;
         return;
     }
     
@@ -330,7 +340,7 @@ void Snake::updateBoard()
     board[snake_x][snake_y] = snake_length;
 }
 
-void Snake::calc_m_board()
+void Snake::calc_h_board()
 {
     for (int i = 0; i < board_height; i++)
     {
@@ -494,6 +504,22 @@ void Snake::displayPath()
     for(int i = 0; i < path.size(); i++)
     {
         cout << path[i];
+    }
+}
+
+void Snake::resetPath()
+{
+    path.clear();
+}
+
+void Snake::resetPathBoard()
+{
+    for(int i = 0; i < 12; i++)
+    {
+        for(int j = 0; j < 12; j++)
+        {
+            path_board[i][j] = 'x';
+        }
     }
 }
 
