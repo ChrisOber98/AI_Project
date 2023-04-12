@@ -2,8 +2,8 @@
 #include <chrono>
 #include <thread>
 #include <random>
-#include <tuple>
 #include <list>
+#include <tuple>
 #include <stdexcept>
 #include <string>
 #include <algorithm>
@@ -99,6 +99,7 @@ public:
     void resetPath();
     void displayPath();
     void resetPathBoard();
+	bool existsInList(tuple<int, int> x, list<tuple<int, int> > myList);
 
 };
 
@@ -158,10 +159,20 @@ void Snake::play()
         resetPath();
         resetPathBoard();
         calc_h_board();
+		// displayHBoard();
         calcAStar();
+		// displayPathBoard();
         getPath();
+		
+		// for(int i = 0; i < path.size(); i++){
+		// 	cout << path[i];
+		// } 
+		// cout << endl;
+
         while(exit != true)
         {
+			getInput();
+
             updatePlayer();
             updateBoard();
             displayBoard();
@@ -170,8 +181,6 @@ void Snake::play()
             // avoids multiple moves in one turn
             std::this_thread::sleep_for(std::chrono::milliseconds(250));
             fseek(stdin,0,SEEK_END);
-
-            getInput();
             
             //exit = true;
         }
@@ -305,6 +314,7 @@ void Snake::updateBoard()
     {
         snake_length++;
         eaten = false;
+		exit = true;
         // increment all snake body
         for (int i = 1; i < board_height-1; i++)
         {
@@ -348,7 +358,7 @@ void Snake::calc_h_board()
         {
             if(i == 0 || i == 11 || j == 0 || j == 11)
             {
-                h_board[i][j] = -1;
+                h_board[i][j] = 999;
             }
             else
             {
@@ -358,15 +368,15 @@ void Snake::calc_h_board()
                 int man_dist = 0;
 
                 x_dif = apple_x - i;
-                  y_dif = apple_y - j;
+				y_dif = apple_y - j;
 
-                  if (x_dif < 0)
-                      x_dif = -x_dif;
+				if (x_dif < 0)
+					x_dif = -x_dif;
 
-                  if (y_dif < 0)
-                      y_dif = -y_dif;
+				if (y_dif < 0)
+					y_dif = -y_dif;
 
-                  h_board[i][j] = x_dif + y_dif;
+				h_board[i][j] = x_dif + y_dif;
             }
         }
     }
@@ -387,18 +397,22 @@ void Snake::displayHBoard()
 
 void Snake::calcAStar()
 {
-    list<tuple<int, int> > open_list;
-    list<tuple<int, int> > close_list;
+    list<tuple<int, int> > open_list = {};
+    list<tuple<int, int> > close_list = {};
 
     tuple<int, int> temp = make_tuple (snake_x, snake_y);
 
     open_list.push_back(temp);
 
-    int lowest_val = 999;
-    tuple<int, int> lowest_tup = getTuple(open_list, 0);
+    // int lowest_val = h_board[get<0>(getTuple(open_list, 0))][get<1>(getTuple(open_list, 0))];
+    // tuple<int, int> lowest_tup = getTuple(open_list, 0);
 
     while (open_list.size() != 0)
     {
+		int lowest_val = h_board[get<0>(getTuple(open_list, 0))][get<1>(getTuple(open_list, 0))];
+    	tuple<int, int> lowest_tup = getTuple(open_list, 0);
+
+		// get the lowest value state on the list
         for (int i = 0; i < open_list.size(); i++)
         {
             if(lowest_val >= h_board[get<0>(getTuple(open_list, i))][get<1>(getTuple(open_list, i))])
@@ -407,23 +421,70 @@ void Snake::calcAStar()
                 lowest_tup = getTuple(open_list, i);
             }
         }
+		// remove the state from the open list
+        //open_list.remove(lowest_tup);
 
-        open_list.remove(lowest_tup);
+		// auto unwanted = [&lowest_tup](const tuple<int,int>& t) {return get<0>(t)==get<0>(lowest_tup) or get<1>(t)==get<1>(lowest_tup);};
+		// open_list.remove_if(unwanted);
 
-        tuple<int, int> down_child = make_tuple (get<0>(lowest_tup)+1, get<1>(lowest_tup));
-        if(checkChild(down_child, lowest_tup, open_list, close_list, 's'))
-            break;
+		// std::erase_if(open_list, [&lowest_tup](const tuple<int,int>& elem) {
+		// return get<0>(elem) == get<0>(lowest_tup) || get<1>(elem) == get<1>(lowest_tup); });
+
+		// cout << "TESTING REMOVE: removing " << get<0>(lowest_tup) << ", " << get<1>(lowest_tup) << endl;
+
+		// cout << "FULL OPEN LIST BEFORE: " << endl;
+		// for(int i = 0; i < open_list.size(); i++){
+		// 	cout << "\t" << get<0>(getTuple(open_list, i)) << ", " << get<1>(getTuple(open_list, i));
+		// } 
+		// cout << endl;
+
+
+		open_list.remove_if([&lowest_tup](tuple<int, int> elem){ 
+			return get<0>(elem) == get<0>(lowest_tup) && get<1>(elem) == get<1>(lowest_tup); });
+
+		// cout << "FULL OPEN LIST AFTER: " << endl;
+		// for(int i = 0; i < open_list.size(); i++){
+		// 	cout << "\t" << get<0>(getTuple(open_list, i)) << ", " << get<1>(getTuple(open_list, i));
+		// }
+		// cout << endl;
+
+
+
+
+		//cout << get<0>(lowest_tup) << ", " << get<1>(lowest_tup) << endl;
+
+
+
+
+
+		// check all of current states children
+        // tuple<int, int> down_child = make_tuple (get<0>(lowest_tup)+1, get<1>(lowest_tup));
+        // if(checkChild(down_child, lowest_tup, open_list, close_list, 's'))
+        //     break;
+        // tuple<int, int> up_child = make_tuple (get<0>(lowest_tup)-1, get<1>(lowest_tup));
+        // if(checkChild(up_child, lowest_tup, open_list, close_list, 'w'))
+        //     break;
+        // tuple<int, int> right_child = make_tuple (get<0>(lowest_tup), get<1>(lowest_tup)+1);
+        // if(checkChild(right_child, lowest_tup, open_list, close_list, 'd'))
+        //     break;
+        // tuple<int, int> left_child = make_tuple (get<0>(lowest_tup), get<1>(lowest_tup)-1);
+        // if(checkChild(left_child, lowest_tup, open_list, close_list, 'a'))
+        //     break;
+
+		tuple<int, int> down_child = make_tuple (get<0>(lowest_tup)+1, get<1>(lowest_tup));
+        checkChild(down_child, lowest_tup, open_list, close_list, 's');
         tuple<int, int> up_child = make_tuple (get<0>(lowest_tup)-1, get<1>(lowest_tup));
-        if(checkChild(up_child, lowest_tup, open_list, close_list, 'w'))
-            break;
+        checkChild(up_child, lowest_tup, open_list, close_list, 'w');
         tuple<int, int> right_child = make_tuple (get<0>(lowest_tup), get<1>(lowest_tup)+1);
-        if(checkChild(right_child, lowest_tup, open_list, close_list, 'd'))
-            break;
+        checkChild(right_child, lowest_tup, open_list, close_list, 'd');
         tuple<int, int> left_child = make_tuple (get<0>(lowest_tup), get<1>(lowest_tup)-1);
-        if(checkChild(left_child, lowest_tup, open_list, close_list, 'a'))
-            break;
-
+        checkChild(left_child, lowest_tup, open_list, close_list, 'a');
+		// add current state to closed list
         close_list.push_back(lowest_tup);
+		if(board[get<0>(lowest_tup)][get<1>(lowest_tup)] == -10){
+			break;
+		}
+			
     }
 
     // for (auto v : open_list)
@@ -435,8 +496,11 @@ void Snake::calcAStar()
 
 bool Snake::checkChild(tuple<int, int> child, tuple<int, int> lowest_tup, list<tuple<int, int> > &open_list, list<tuple<int, int> > &close_list, char dir)
 {
-    bool found_closed = (find(close_list.begin(), close_list.end(), child) != close_list.end());
-    bool found_open = (find(open_list.begin(), open_list.end(), child) != open_list.end());
+    // bool found_closed = (find(close_list.begin(), close_list.end(), child) != close_list.end());
+    // bool found_open = (find(open_list.begin(), open_list.end(), child) != open_list.end());
+
+	bool found_closed = existsInList(child, close_list);
+	bool found_open = existsInList(child, open_list);
 
     int test_child = board[get<0>(child)][get<1>(child)];
 
@@ -444,24 +508,38 @@ bool Snake::checkChild(tuple<int, int> child, tuple<int, int> lowest_tup, list<t
     {
         return false;
     }
-    else if(test_child == -10)
-    {
-        path_board[get<0>(child)][get<1>(child)] = dir;
-        return true;
-    }
+    // else if(test_child == -10)
+    // {
+	// 	open_list.push_back(child);
+    //     path_board[get<0>(child)][get<1>(child)] = dir;
+    //     return true;
+    // }
 
-    if(!found_open && !found_closed)
+    if(!found_open && !found_closed && (test_child == 0 || test_child == -10))
     {
         open_list.push_back(child);
-        
         path_board[get<0>(child)][get<1>(child)] = dir;
         
+		if(test_child == -10)
+		{
+			return true;
+		}
         return false;
     }
     
     return false;
 
 }
+
+bool Snake::existsInList(tuple<int, int> x, list<tuple<int, int> > myList){
+
+	for(int i = 0; i < myList.size(); i++){
+		if(get<0>(x) == get<0>(getTuple(myList,i)) && get<1>(x) == get<1>(getTuple(myList, i))){
+			return true;
+		}
+	} return false;
+}
+
 
 void Snake::getPath()
 {
