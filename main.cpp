@@ -72,6 +72,7 @@ public:
 	void updateBoard();
 	void calc_m_board();
 	void displayMBoard();
+	void calcAStar();
 
 };
 
@@ -288,11 +289,7 @@ void Snake::calc_m_board()
 	{
 		for (int j = 0; j < board_length; j++)
 		{
-			if(i == 0 || i == 11)
-			{
-				board[i][j] = -1;
-			}
-			else if(j == 0 || j == 11)
+			if(i == 0 || i == 11 || j == 0 || j == 11)
 			{
 				board[i][j] = -1;
 			}
@@ -329,4 +326,9 @@ void Snake::displayMBoard()
 		}
 		cout << endl;
 	}		
+}
+
+void Snake::calcAStar()
+{
+	
 }
