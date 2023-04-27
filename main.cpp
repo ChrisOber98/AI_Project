@@ -20,6 +20,8 @@ private:
     int board[12][12];
     int h_board[12][12];
     char path_board[12][12];
+	double q_board [12][12][4];
+	double r_board [12][12];
     bool up, left, down, right, exit, eaten;
     vector<char> path;
 
@@ -77,8 +79,29 @@ public:
             }
         }
 
+		for (int i = 0; i < board_height; i++)
+		{
+			for (int j = 0; j < board_length; j++)
+            {
+                for (int k = 0; k < 4; k++){
+					q_board[i][j][k] = 0;
+				}
+            }
+		}
+
+		for (int i = 0; i < board_height; i++)
+        {
+            for (int j = 0; j < board_length; j++)
+            {
+                r_board[i][j] = board[i][j];
+            }
+        }
+		r_board[apple_x][apple_y] = 10;
+
         board[snake_x][snake_y] = snake_length;
         board[apple_x][apple_y] = -10;
+
+
     }
     ~Snake()
     {
