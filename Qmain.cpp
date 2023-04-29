@@ -25,6 +25,7 @@
 using namespace std;
 
 double getMax(double arr[4]);
+int getMaxIndex(double* q_board);
 
 class Snake
 {
@@ -131,7 +132,7 @@ public:
     void displayPathBoard(); // A*
     void calcAStar(); // A*
     bool checkChild(tuple<int, int> child, tuple<int, int> lowest_tup, list<tuple<int, int> > &open_list, list<tuple<int, int> > &close_list, char dir); // A*
-    void getPath(); // A*
+    void getPathBoard(); 
     void resetPath(); // A*
     void displayPath(); // A*
     void resetPathBoard(); // A*
@@ -198,21 +199,12 @@ void Snake::play()
     while(true)
     {
         exit = false;
-        //resetPath();
-        //resetPathBoard();
-        //calc_h_board();
-		// displayHBoard();
-        //calcAStar();
-		// displayPathBoard();
-        //getPath();
-		
-		// for(int i = 0; i < path.size(); i++){
-		// 	cout << path[i];
-		// } 
-		// cout << endl;
-        calc_q_board(1000);
+        resetPathBoard();
+        calc_q_board(1000000);
         display_q_board();
-
+        getPathBoard();
+        displayPathBoard();
+        //return;
         while(exit != true)
         {
 			getInput();
@@ -247,13 +239,13 @@ void Snake::getInput()
 //    // Reset terminal to normal "cooked" mode
 //    system("stty cooked");
     
-    if(path.size() == 0)
-    {
-        exit = true;
-        return;
-    }
-    
-    char input = path[0];
+    // if(path.size() == 0)
+    // {
+    //     exit = true;
+    //     return;
+    // }
+
+    char input = path_board[snake_x][snake_y];
 
     if (input == 'w')
     {
@@ -292,7 +284,7 @@ void Snake::getInput()
         }
     }
     
-    path.erase(path.begin());
+    //path.erase(path.begin());
 }
 
 void Snake::updatePlayer()
@@ -585,38 +577,31 @@ bool Snake::existsInList(tuple<int, int> x, list<tuple<int, int> > myList){
 }
 
 
-void Snake::getPath()
+void Snake::getPathBoard()
 {
-    tuple<int, int> goal = make_tuple (apple_x, apple_y);
-    tuple<int, int> start = make_tuple (snake_x, snake_y);
-
-    while(true)
-    {
-        char path_value = path_board[get<0>(goal)][get<1>(goal)];
-        
-        if(path_value == 'x')
-        {
-            reverse(path.begin(), path.end());
-            return;
-        }
-
-        path.push_back(path_value);
-
-        if(path_value == 'w')
-        {
-            goal = make_tuple (get<0>(goal)+1, get<1>(goal));
-        }
-        else if(path_value == 's')
-        {
-            goal = make_tuple (get<0>(goal)-1, get<1>(goal));
-        }
-        else if(path_value == 'a')
-        {
-            goal = make_tuple (get<0>(goal), get<1>(goal)+1);
-        }
-        else if(path_value == 'd')
-        {
-            goal = make_tuple (get<0>(goal), get<1>(goal)-1);
+    for(int i = 0; i < 12; i++){
+        for(int j = 0; j < 12; j++){
+            char move;
+            int dir = 0;
+            dir = getMaxIndex(q_board[i][j]);
+            switch(dir){
+                case 0:
+                    move = 'w';
+                    break;
+                case 1:
+                    move = 'd';
+                    break;
+                case 2:
+                    move = 's';
+                    break;
+                case 3:
+                    move = 'a';
+                    break;
+                default:
+                    move = 'd';
+                    break;
+            }
+            path_board[i][j] = move;
         }
     }
 }
@@ -774,4 +759,14 @@ double getMax(double arr[4]){
         }
     }
     return myMax;
+}
+
+int getMaxIndex(double* q_board){
+    int myIndex = 0;
+    for(int i = 0; i < 4; i++){
+        if(q_board[i] > q_board[myIndex]){
+            myIndex = i;
+        }
+    }
+    return myIndex;
 }
