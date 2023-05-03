@@ -11,6 +11,8 @@
 
 using namespace std;
 
+int stepsTaken = 0;
+
 class Snake
 {
 private:
@@ -22,7 +24,7 @@ private:
     char path_board[12][12];
 	double q_board [12][12][4];
 	double r_board [12][12];
-    bool up, left, down, right, exit, eaten;
+    bool up, left, down, right, exit, endProgram, eaten;
     vector<char> path;
 
 
@@ -34,6 +36,7 @@ public:
         down = false;
         right = false;
         exit = false;
+        endProgram = false;
         eaten = false;
         prevInput = 2;
 
@@ -123,6 +126,7 @@ public:
     void displayPath();
     void resetPathBoard();
 	bool existsInList(tuple<int, int> x, list<tuple<int, int> > myList);
+    int getPoints();
 
 };
 
@@ -131,11 +135,15 @@ tuple<int, int> getTuple(list<tuple<int, int> >, int);
 int main(){
 
     // instructions
-    cout << "To play use 'wasd' to move." << endl;
-    cout << "To exit use 'x'." << endl;
-    cout << "Press enter to start." << endl;
+    //cout << "To play use 'wasd' to move." << endl;
+    //cout << "To exit use 'x'." << endl;
+    //cout << "Press enter to start." << endl;
     Snake my_snake;
     my_snake.play();
+
+    cout << "Final Score: " << my_snake.getPoints() << endl;
+    cout << "Final Steps Taken " << stepsTaken << endl;
+
     return 0;
 }
 
@@ -176,7 +184,7 @@ void Snake::displayPathBoard()
 
 void Snake::play()
 {
-    while(true)
+    while(!endProgram)
     {
         exit = false;
         resetPath();
@@ -192,12 +200,17 @@ void Snake::play()
 		// } 
 		// cout << endl;
 
-        while(exit != true)
+        while(!exit)
         {
+            stepsTaken++;
 			getInput();
 
             updatePlayer();
+            if(!eaten && path.size() == 0){
+                endProgram = true;
+            }
             updateBoard();
+            cout << "Steps taken: " << stepsTaken << endl;
 			cout << "Points scored: " << points << endl;
             displayBoard();
             
@@ -370,6 +383,7 @@ void Snake::updateBoard()
             }
         }while(collision);
     }
+
     board[snake_x][snake_y] = snake_length;
 }
 
@@ -633,3 +647,6 @@ tuple<int, int> getTuple(list<tuple<int, int> > _list, int _i)
     return *it;
 }
 
+int Snake::getPoints(){
+    return points;
+}

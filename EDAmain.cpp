@@ -8,24 +8,9 @@
 #include <string>
 #include <algorithm>
 #include <vector>
-#include <stdlib.h>
-#include <time.h>
-#include <iomanip>
-
-
-
-
-// RIGHT = DOWN
-// LEFT = UP
-// UP = LEFT
-// DOWN = RIGHT
-
-
 
 using namespace std;
 
-double getMax(double arr[4]);
-int getMaxIndex(double* q_board);
 int stepsTaken = 0;
 
 class Snake
@@ -35,9 +20,10 @@ private:
     int apple_x, apple_y;
     int points;
     int board[12][12];
-    int h_board[12][12];
+    double h_board[12][12];
     char path_board[12][12];
 	double q_board [12][12][4];
+	double r_board [12][12];
     bool up, left, down, right, exit, endProgram, eaten;
     vector<char> path;
 
@@ -88,14 +74,6 @@ public:
             }
         }
 
-        // test snake body
-        // board[3][3] = 1;
-        // board[3][4] = 2;
-        // board[3][5] = 3;
-        // board[3][6] = 4;
-
-
-
         for (int i = 0; i < board_height; i++)
         {
             for (int j = 0; j < board_length; j++)
@@ -114,6 +92,15 @@ public:
             }
 		}
 
+		for (int i = 0; i < board_height; i++)
+        {
+            for (int j = 0; j < board_length; j++)
+            {
+                r_board[i][j] = board[i][j];
+            }
+        }
+		r_board[apple_x][apple_y] = 10;
+
         board[snake_x][snake_y] = snake_length;
         board[apple_x][apple_y] = -10;
 
@@ -129,30 +116,23 @@ public:
     void getInput();
     void updatePlayer();
     void updateBoard();
-    void calc_h_board(); // A*
-    void displayHBoard(); // A*
-    void displayPathBoard(); // A*
-    void calcAStar(); // A*
-    bool checkChild(tuple<int, int> child, tuple<int, int> lowest_tup, list<tuple<int, int> > &open_list, list<tuple<int, int> > &close_list, char dir); // A*
-    void getPathBoard(); 
-    void resetPath(); // A*
-    void displayPath(); // A*
-    void resetPathBoard(); // A*
-	bool existsInList(tuple<int, int> x, list<tuple<int, int> > myList); // A*
-
-    double reward(tuple<int, int> coord, int action); // QL
-    void calc_q_board(int episodes); // QL
-    void display_q_board(); // QL
-
+    void calc_h_board();
+    void displayHBoard();
+    void displayPathBoard();
+    void calcAStar();
+    bool checkChild(tuple<int, int> child, tuple<int, int> lowest_tup, list<tuple<int, int> > &open_list, list<tuple<int, int> > &close_list, char dir);
+    void getPath();
+    void resetPath();
+    void displayPath();
+    void resetPathBoard();
+	bool existsInList(tuple<int, int> x, list<tuple<int, int> > myList);
     int getPoints();
-
 
 };
 
 tuple<int, int> getTuple(list<tuple<int, int> >, int);
 
 int main(){
-    srand(time(NULL));
 
     // instructions
     //cout << "To play use 'wasd' to move." << endl;
@@ -163,7 +143,7 @@ int main(){
 
     cout << "Final Score: " << my_snake.getPoints() << endl;
     cout << "Final Steps Taken " << stepsTaken << endl;
-    
+
     return 0;
 }
 
@@ -207,18 +187,28 @@ void Snake::play()
     while(!endProgram)
     {
         exit = false;
+        resetPath();
         resetPathBoard();
-        calc_q_board(1000000);
-        //display_q_board();
-        getPathBoard();
-        //displayPathBoard();
-        //return;
-        while(exit != true)
+        calc_h_board();
+		// displayHBoard();
+        calcAStar();
+		// displayPathBoard();
+        getPath();
+		
+		// for(int i = 0; i < path.size(); i++){
+		// 	cout << path[i];
+		// } 
+		// cout << endl;
+
+        while(!exit)
         {
             stepsTaken++;
 			getInput();
 
             updatePlayer();
+            if(!eaten && path.size() == 0){
+                endProgram = true;
+            }
             updateBoard();
             cout << "Steps taken: " << stepsTaken << endl;
 			cout << "Points scored: " << points << endl;
@@ -232,7 +222,6 @@ void Snake::play()
             //exit = true;
         }
     }
-
 }
 
 void Snake::getInput()
@@ -250,13 +239,13 @@ void Snake::getInput()
 //    // Reset terminal to normal "cooked" mode
 //    system("stty cooked");
     
-    // if(path.size() == 0)
-    // {
-    //     exit = true;
-    //     return;
-    // }
-
-    char input = path_board[snake_x][snake_y];
+    if(path.size() == 0)
+    {
+        exit = true;
+        return;
+    }
+    
+    char input = path[0];
 
     if (input == 'w')
     {
@@ -295,7 +284,7 @@ void Snake::getInput()
         }
     }
     
-    //path.erase(path.begin());
+    path.erase(path.begin());
 }
 
 void Snake::updatePlayer()
@@ -305,30 +294,27 @@ void Snake::updatePlayer()
         // move the snake
         snake_x -= 1;
         // make sure we're not going out of bounds
-        if(snake_x == 0){
+        if(snake_x == 0)
             snake_x += 1;
-        }
     }
     else if (left == true)
     {
         snake_y -= 1;
-        if(snake_y == 0){
+        if(snake_y == 0)
             snake_y += 1;
-        }
     }
     else if (down == true)
     {
         snake_x += 1;
-        if(snake_x == 11){
+        if(snake_x == 11)
             snake_x -= 1;
-        }
     }
     else if (right == true)
     {
         snake_y += 1;
-        if(snake_y == 11){
+        if(snake_y == 11)
             snake_y -= 1;
-        }
+
     }
 
     // record if we are eating an apple
@@ -397,10 +383,7 @@ void Snake::updateBoard()
             }
         }while(collision);
     }
-    if(board[snake_x][snake_y] != 0 && board[snake_x][snake_y] != -10){
-        exit = true;
-        endProgram = true;
-    }
+
     board[snake_x][snake_y] = snake_length;
 }
 
@@ -416,21 +399,9 @@ void Snake::calc_h_board()
             }
             else
             {
-                int x_dif = 0;
-                int y_dif = 0;
+                double distance = pow(i - apple_x, 2) + pow(j - apple_y, 2);
 
-                int man_dist = 0;
-
-                x_dif = apple_x - i;
-				y_dif = apple_y - j;
-
-				if (x_dif < 0)
-					x_dif = -x_dif;
-
-				if (y_dif < 0)
-					y_dif = -y_dif;
-
-				h_board[i][j] = x_dif + y_dif;
+				h_board[i][j] = distance;
             }
         }
     }
@@ -595,31 +566,38 @@ bool Snake::existsInList(tuple<int, int> x, list<tuple<int, int> > myList){
 }
 
 
-void Snake::getPathBoard()
+void Snake::getPath()
 {
-    for(int i = 0; i < 12; i++){
-        for(int j = 0; j < 12; j++){
-            char move;
-            int dir = 0;
-            dir = getMaxIndex(q_board[i][j]);
-            switch(dir){
-                case 0:
-                    move = 'w';
-                    break;
-                case 1:
-                    move = 'd';
-                    break;
-                case 2:
-                    move = 's';
-                    break;
-                case 3:
-                    move = 'a';
-                    break;
-                default:
-                    move = 'd';
-                    break;
-            }
-            path_board[i][j] = move;
+    tuple<int, int> goal = make_tuple (apple_x, apple_y);
+    tuple<int, int> start = make_tuple (snake_x, snake_y);
+
+    while(true)
+    {
+        char path_value = path_board[get<0>(goal)][get<1>(goal)];
+        
+        if(path_value == 'x')
+        {
+            reverse(path.begin(), path.end());
+            return;
+        }
+
+        path.push_back(path_value);
+
+        if(path_value == 'w')
+        {
+            goal = make_tuple (get<0>(goal)+1, get<1>(goal));
+        }
+        else if(path_value == 's')
+        {
+            goal = make_tuple (get<0>(goal)-1, get<1>(goal));
+        }
+        else if(path_value == 'a')
+        {
+            goal = make_tuple (get<0>(goal), get<1>(goal)+1);
+        }
+        else if(path_value == 'd')
+        {
+            goal = make_tuple (get<0>(goal), get<1>(goal)-1);
         }
     }
 }
@@ -657,138 +635,6 @@ tuple<int, int> getTuple(list<tuple<int, int> > _list, int _i)
     return *it;
 }
 
-void Snake::calc_q_board(int episodes){
-
-
-
-
-
-
-
-    
-    double gamma = 0.9;
-    double lRate = 0.1;
-
-
-
-
-
-
-
-    for(int i =0; i < episodes; i++){
-        int randX2 = rand()%12;
-        int randY2 = rand()%12;
-        int randAction = rand()%4;
-
-        int myX = randX2;
-        int myY = randY2;
-        switch(randAction){
-            case 0: // up
-                myX -= 1;
-                break;
-            case 1: // right
-                myY += 1;
-                break;
-            case 2: // down
-                myX += 1;
-                break;
-            case 3: // left
-                myY -= 1;
-                break;
-            default:
-                break;
-        }
-
-        if(myX == -1 || myX == 12 || myY == -1 || myY == 12){
-            q_board[randX2][randY2][randAction] = -999;
-            //display_q_board();
-            continue;
-        }
-
-        double currValue = q_board[randX2][randY2][randAction];
-        //double val1maxQ = (gamma * *max_element(q_board[myX][myY] , q_board[myX][myY] + 3));
-        double val1maxQ = (gamma * getMax(q_board[myX][myY]));
-        double val1Reward = reward(make_tuple (myX, myY), randAction);
-        q_board[randX2][randY2][randAction] = (currValue) + lRate * (val1Reward + val1maxQ - currValue);
-
-
-        // double val1Reward = reward(make_tuple (myX, myY), randAction);
-        // double val1maxQ = (gamma * *max_element(q_board[myX][myY] , q_board[myX][myY] + 3));
-        // double val1 = val1Reward + val1maxQ;
-
-
-        //q_board[randX2][randY2][randAction] = val1;
-
-        //display_q_board();
-    }
-}
-
-double Snake::reward(tuple<int, int> coord, int action)
-{
-    int myVal = board[get<0>(coord)][get<1>(coord)];
-
-    switch ( myVal ){
-        case -10:
-            return 1;
-            break;
-        case -1:
-            return -10;
-            break;
-        case 0:
-            return -1;
-            break;
-        default:
-            return -10;
-            break;
-    }
-    return -10;
-}
-
-void Snake::display_q_board(){
-
-    char dummy;
-    //cin >> dummy;
-    cout << endl;
-    for (int i = 0; i < 12; i++)
-    {
-        for (int j = 0; j < 12; j++)
-        {
-            cout << "[";
-            for (int k = 0; k < 4; k++){
-                if (!(q_board[i][j][k] > 9)){
-                    cout << setprecision(1) << std::llround(q_board[i][j][k]);
-                    if(k < 3) cout << ", ";
-                } else {
-                    cout << "x";
-                    if(k < 3) cout << ", ";
-                }
-            }
-            cout << "] ";
-        }
-        cout << endl;
-    }
-}
-
 int Snake::getPoints(){
     return points;
-}
-
-double getMax(double arr[4]){
-    double myMax = arr[0];
-    for(int i = 0; i < 4; i++){
-        if(arr[i] > myMax){
-            myMax = arr[i];
-        }
-    }
-    return myMax;
-}
-
-int getMaxIndex(double* q_board){
-    int myIndex = 0;
-    for(int i = 0; i < 4; i++){
-        if(q_board[i] > q_board[myIndex]){
-            myIndex = i;
-        }
-    }
-    return myIndex;
 }
